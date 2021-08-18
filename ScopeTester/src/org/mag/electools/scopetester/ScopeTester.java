@@ -10,6 +10,9 @@ import purejavahidapi.PureJavaHidApi;
 
 
 /*
+ * Author: Michelle Grotaers
+ * Date : 18/08/2021
+ * 
  * This program tests the speed of the DataCollector class in the MyScopeJava
  * program.  It plays with speed of java threads as well as HID device input.
  * Need to apply time to HID device collectData function and think about
@@ -30,6 +33,7 @@ public class ScopeTester {
 
 	public static void main(String[] args) {
 		try {
+			//start the device and collect the data
 			dc = new ScopeTester();
 			HidDevice theDevice = dc.findDevice();
 			if(theDevice == null){
@@ -52,7 +56,6 @@ public class ScopeTester {
 	}
 	
 	public ScopeTester() {
-		
 		//set initial conditions of variables
 		time = 0;
 		pt = 0;
@@ -60,10 +63,13 @@ public class ScopeTester {
 		
 	}
 	
-	
+	/*
+	 * This is test dummy data collector and is accessed when nothing
+	 * connected to computer.
+	 */
 	public void collectData(){
 		
-		//This is test dataCollector for when device not connected.
+		//This is test data collector for when device not connected.
 		//In this example it will only simulate time response.
 		//Max speed on laptop is 30kHz if not buffered to 75kHz if buffered.
 		time = 0;
@@ -100,10 +106,13 @@ public class ScopeTester {
 		});
 		testThread.start();
 		testThread.setName("Scope Dummy Data");
-		//TEST SIGN GRAPH STOP
+		
 	}
 	
-	
+	/*
+	 * This is device data collector and is accessed when circuit connected
+	 * to computer.
+	 */
 	public void collectData(final HidDevice dev){
 		
 		//START REAL CODE
@@ -212,6 +221,10 @@ public class ScopeTester {
 		}
 	}
 	
+	/*
+	 * This function takes the binary input and converts the byte code
+	 * to a integer number between 0 and 1024.
+	 */
 	private static int convertBytes (byte a, byte b){
 		return (int)(
 				(0xff & a) << 8 |
