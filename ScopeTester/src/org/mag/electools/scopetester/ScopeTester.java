@@ -12,7 +12,7 @@ import purejavahidapi.PureJavaHidApi;
 /*
  * Author: Michelle Grotaers
  * Date : 18/08/2021
- * Version : 0.0.001
+ * Version : 0.0.002
  * 
  * This program tests the speed of the DataCollector class in the MyScopeJava
  * program.  It plays with speed of java threads as well as HID device input.
