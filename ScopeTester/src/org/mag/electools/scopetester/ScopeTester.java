@@ -1,7 +1,9 @@
 package org.mag.electools.scopetester;
 
 import java.io.IOException;
+import java.nio.DoubleBuffer;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import purejavahidapi.DeviceRemovalListener;
 import purejavahidapi.HidDevice;
@@ -26,7 +28,9 @@ public class ScopeTester {
 	private static ScopeTester dc;
 	
 	private double time;
-	private double[] deltaTimeArray;
+	private DoubleBuffer deltaValueArray;
+	private DoubleBuffer deltaTimeArray;
+	private int arrayCapacity = 100;
 	
 	public Thread testThread;
 	private double pt;
@@ -59,8 +63,11 @@ public class ScopeTester {
 		//set initial conditions of variables
 		time = 0;
 		pt = 0;
-		deltaTimeArray = new double[20];
-		
+		//deltaTimeArray = new double[20];
+        deltaValueArray = DoubleBuffer.allocate(arrayCapacity);
+        deltaTimeArray = DoubleBuffer.allocate(arrayCapacity);
+        deltaValueArray.clear();
+        deltaTimeArray.clear();
 	}
 	
 	/*
@@ -81,24 +88,13 @@ public class ScopeTester {
 			public void run(){
 						
 				while (true){
-					//modify code with a buffer of 1000 times run.  
-					//Max freq at 76kHz.  Read out is 75Hz.
-					double ct = System.nanoTime();//.currentTimeMillis();//.nanoTime();
+					 
+					double ct = System.nanoTime();
 					double dt_new = ct - pt;
 					
 					pt = ct;
-					time = time + dt_new/1E9;//value in seconds
-					
+					time = dt_new/1E6;//value in milli seconds
 					pushValue((short) 0, time);
-					/*
-					//Apply Buffer.
-					int i = 0;
-					while (i<1000){
-						System.out.print("*");
-						i++;
-					}
-					System.out.println();
-					*/
 					
 				}	
 			}
@@ -106,6 +102,22 @@ public class ScopeTester {
 		});
 		testThread.start();
 		testThread.setName("Scope Dummy Data");
+		
+		//print delta time to screen
+		int i = 0;
+		while(i<10){
+			
+			try {
+				System.out.println(time);
+				//System.out.println(time + ": " + Arrays.toString(ib.array()));
+				TimeUnit.MILLISECONDS.sleep(1);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			i++;
+		}
 		
 	}
 	
@@ -125,17 +137,39 @@ public class ScopeTester {
 					
 					while (true){
 						
+						double ct = System.nanoTime();
+						double dt_new = ct - pt;
+						
+						pt = ct;
+						time = dt_new/1E6;//value in milli seconds
+						
 						byte[] data = new byte[10];
 						data[0] = 1;
 						if (((dev.getFeatureReport(data, data.length)) >= 0) && true) {
-							System.out.println(convertBytes(data[0],data[1]));
 							pushValue((short) convertBytes(data[0],data[1]), 0);
 						}
+						
 					}
 				}
 			});
 			testThread.start();
 			testThread.setName("Scope Real Data");
+			
+			//print delta time to screen
+			int i = 0;
+			while(i<10){
+				
+				try {
+					System.out.println(time);
+					//System.out.println(time + ": " + Arrays.toString(ib.array()));
+					TimeUnit.MILLISECONDS.sleep(1);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				i++;
+			}
 		}
 		
 		//END READ CODE
@@ -149,26 +183,14 @@ public class ScopeTester {
 	private void pushValue(short curValue, double timeValue){
 		
 		//Time and value
-		//System.out.println(timeValue);//"time: " + timeValue + ", value: " + curValue);
+		//System.out.println(timeValue);
 		
-		//delta time and frequency on moving average of 20 samples.
-		//pop first value and push value for graph at end of dataset
+		//Create DoubleBuffer of time and value
+		deltaValueArray.put(curValue);
+		nextPointerIn(deltaValueArray);
 		
-		for (int i=0; i<deltaTimeArray.length-1; i++){
-			deltaTimeArray[i] = deltaTimeArray[i+1];
-		}
-		deltaTimeArray[deltaTimeArray.length-1]= timeValue;
-		
-		double sumTimeArray = (double) 0;
-		for (int j=1; j<deltaTimeArray.length-1; j++){
-			double deltaTime = deltaTimeArray[j] - deltaTimeArray[j-1];
-			sumTimeArray = sumTimeArray + deltaTime;
-		}
-		
-		
-		//System.out.println(deltaTimeArray[0] + "," + deltaTimeArray[1] + "," + deltaTimeArray[2]);
-		System.out.println("av time (sec): " + sumTimeArray/(deltaTimeArray.length-1)
-				+ ", av freq (Hz): " + 1/(sumTimeArray/(deltaTimeArray.length-1)));
+		deltaTimeArray.put(timeValue);
+		nextPointerIn(deltaTimeArray);
 		
 	}
 	
@@ -230,6 +252,16 @@ public class ScopeTester {
 				(0xff & a) << 8 |
 				(0xff & b) << 0
 				);
+	}
+	
+	private void nextPointerIn (DoubleBuffer ib){
+		
+		if(ib.position()<ib.limit()){
+    		ib.position(ib.position());
+    	} else {
+    		ib.clear();//back to start.
+    	}
+		
 	}
 	
 }
