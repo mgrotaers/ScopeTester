@@ -64,10 +64,10 @@ public class ScopeTester {
 		time = 0;
 		pt = 0;
 		//deltaTimeArray = new double[20];
-        deltaValueArray = DoubleBuffer.allocate(arrayCapacity);
-        deltaTimeArray = DoubleBuffer.allocate(arrayCapacity);
-        deltaValueArray.clear();
-        deltaTimeArray.clear();
+        	deltaValueArray = DoubleBuffer.allocate(arrayCapacity);
+        	deltaTimeArray = DoubleBuffer.allocate(arrayCapacity);
+        	deltaValueArray.clear();
+        	deltaTimeArray.clear();
 	}
 	
 	/*
